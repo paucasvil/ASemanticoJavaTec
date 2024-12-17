@@ -158,13 +158,6 @@ public class SintacticoSemantico {
         cmp.me.error ( cmp.ERR_SINTACTICO, _descripError );
     }
     // Fin de error
-    
-    // ------------------------------------------------------------------------------------------------------------------------------------------------
-    
-    // ------------------------------------------------------------------------------------------------------------------------------------------------
-    //  *  *   *   *    PEGAR AQUÍ EL CÓDIGO DE LOS PROCEDURES  *  *  *  *
-    // ------------------------------------------------------------------------------------------------------------------------------------------------
-    
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     // CÓDIGO DEL PARSER PREDICTIVO RECURSIVO DE LENGUAJE JAVATEC
     // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -237,7 +230,7 @@ public class SintacticoSemantico {
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     
                     if ( dimension.esArreglo ) {
-                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + lista_identificadores.h + ")" );
+                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longi + ", " + lista_identificadores.h + ")" );
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, lista_identificadores.h );
                     }
@@ -298,7 +291,7 @@ public class SintacticoSemantico {
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     
                     if ( dimension.esArreglo ) {
-                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + lista_identificadores_prima.h + ")" );
+                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longi + ", " + lista_identificadores_prima.h + ")" );
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, lista_identificadores_prima.h );
                     }
@@ -370,10 +363,10 @@ public class SintacticoSemantico {
             }
             // Fin Acción semántica 3
             
-            if ( !retroceso ) { // Si no hubo retroceso, continuamos con el procedure
+            if ( !retroceso ) { 
                 lista_identificadores ( lista_identificadores );
                 
-                if ( preAnalisis.equals ( ";" ) ) { // Si es ; se trata de una sentencia de declaración de variable
+                if ( preAnalisis.equals ( ";" ) ) { 
                     emparejar ( ";" );
                     declaraciones ( declaraciones1 );
                     
@@ -389,7 +382,6 @@ public class SintacticoSemantico {
                     // Fin Acción semántica 4
                     
                 } else {
-                    // Limpia la columna tipo de la tabla de símbolos
                     for ( int i = 0; i <= arrayAuxiliar.size() - 1; i++ ) {
                         int idEntrada = arrayAuxiliar.get ( i );
                         cmp.ts.anadeTipo ( idEntrada, "" );
@@ -502,7 +494,7 @@ public class SintacticoSemantico {
             // Acción semántica 10
             if ( analizarSemantica ) {
                 cmp.ts.anadeTipo ( num.entrada, "int" );
-                dimension.longitud = (Integer.parseInt(num.lexema)-1)+ "" ;
+                dimension.longi = (Integer.parseInt(num.lexema)-1)+ "" ;
                 dimension.esArreglo = true;
             }
             // Fin Acción semántica 10
@@ -512,7 +504,7 @@ public class SintacticoSemantico {
             
             // Acción semántica 11
             if ( analizarSemantica ) {
-                dimension.longitud = null;
+                dimension.longi = null;
                 dimension.esArreglo = false;
             }
             // Fin Acción semántica 11
@@ -623,13 +615,12 @@ public class SintacticoSemantico {
                 emparejar("(");
                 lista_parametros(lista_parametros);
                 emparejar(")");
-                //accion semantica 56
+                
+                //Accion semantica 56
                 if (analizarSemantica) {
-                    if (cmp.ts.buscaTipo(id.entrada).equals("") && !lista_parametros.tipo.equals(ERROR_TIPO)) {
-                        // Generar la firma del método: "tipo arg1, tipo arg2 -> tipo_retorno"                        
+                    if (cmp.ts.buscaTipo(id.entrada).equals("") && !lista_parametros.tipo.equals(ERROR_TIPO)) {                                            
                         String firma = String.join("X ", lista_parametros.argumentos) + "-> " + tipo_metodo.tipo;
 
-                        // Registrar en la tabla de símbolos
                         cmp.ts.anadeTipo(id.entrada, firma);
 
                         encab_metodo.tipo = VACIO;
@@ -638,7 +629,7 @@ public class SintacticoSemantico {
                         cmp.me.error(Compilador.ERR_SEMANTICO, "[encab_metodo] El método " + id.lexema + " ya ha sido declarado.");
                     }
                 }
-                //fin accion semantica 56
+                //Fin accion semantica 56
 
             } else {
                 retroceso();
@@ -789,8 +780,8 @@ public class SintacticoSemantico {
                 }
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     if ( dimension.esArreglo == true ) {
-                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + tipo.tipo + ")" );
-                        lista_parametros.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
+                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longi + ", " + tipo.tipo + ")" );
+                        lista_parametros.argumentos.add("array(0.." + dimension.longi + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
                         lista_parametros.argumentos.add(tipo.tipo + " " );
@@ -806,6 +797,7 @@ public class SintacticoSemantico {
             // Fin Acción semántica 61
             
             lista_parametros_prima ( lista_parametros_prima );
+            
             // Acción semántica 62
             if ( analizarSemantica ) {
                 lista_parametros.argumentos.addAll(lista_parametros_prima.argumentos);
@@ -813,7 +805,8 @@ public class SintacticoSemantico {
                     lista_parametros.tipo = VACIO;
                 } else {
                     lista_parametros.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_parametros]. Hay un error de tipo en el parámetro " + id.lexema + "." );
+                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_parametros]. Hay un error de tipo en el parámetro " 
+                            + id.lexema + "." );
                 }
             }
             // Fin Acción semántica 62
@@ -851,13 +844,13 @@ public class SintacticoSemantico {
             
             // Acción semántica 64
             if ( analizarSemantica ) {
-                 if (lista_parametros_prima.argumentos == null) {
+                if (lista_parametros_prima.argumentos == null) {
                     lista_parametros_prima.argumentos = new ArrayList<>();
                 }
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     if ( dimension.esArreglo == true ) {
-                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + tipo.tipo + ")" );
-                        lista_parametros_prima.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
+                        cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longi + ", " + tipo.tipo + ")" );
+                        lista_parametros_prima.argumentos.add("array(0.." + dimension.longi + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
                         lista_parametros_prima.argumentos.add(tipo.tipo + " ");
@@ -881,7 +874,8 @@ public class SintacticoSemantico {
                     lista_parametros_prima.tipo = VACIO;                    
                 } else {
                     lista_parametros_prima.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_parametros_prima]. Hay un error de tipo en el parámetro " + id.lexema + "." );
+                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_parametros_prima]. Hay un error de tipo en el parámetro " + 
+                            id.lexema + "." );
                 }                
             }
             // Fin Acción semántica 65
@@ -1004,8 +998,7 @@ public class SintacticoSemantico {
             
             // Acción semántica 23
             if ( analizarSemantica ) {
-                String aux = cmp.ts.buscaTipo ( id.entrada );
-                
+                String aux = cmp.ts.buscaTipo ( id.entrada );                
                 if ( aux.equals ( "" ) ) {
                     proposicion.tipo = ERROR_TIPO;
                     cmp.me.error ( Compilador.ERR_SEMANTICO, "[proposicion]. El identificador " + id.lexema + " no ha sido declarado." );
@@ -1130,17 +1123,18 @@ public class SintacticoSemantico {
 
         } else if ( preAnalisis.equals ( "opasig" ) ) {
             //proposicion' -> opasig expresion { 29 }
-            
             emparejar ( "opasig" );
             expresion ( expresion );
             
             // Acción semántica 29
             if ( analizarSemantica ) {
-                if ( proposicion_prima.h.equals ( expresion.tipo ) || ( proposicion_prima.h.equals ( "float" ) && expresion.tipo.equals ( "int" ) ) ) {
+                if ( proposicion_prima.h.equals ( expresion.tipo ) || ( proposicion_prima.h.equals ( "float" ) && 
+                        expresion.tipo.equals ( "int" ) ) ) {
                     proposicion_prima.tipo = VACIO;
                 } else {
                     proposicion_prima.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[proposicion_prima]. No se puede asignar un " + expresion.tipo + " a un " + proposicion_prima.h + "." );
+                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[proposicion_prima]. No se puede asignar un " + 
+                            expresion.tipo + " a un " + proposicion_prima.h + "." );                    
                 }
             }
             // Fin Acción semántica 29
@@ -1154,7 +1148,6 @@ public class SintacticoSemantico {
             if ( analizarSemantica ) {
                 if (proposicion_prima.h.equals(proposicion_metodo.tipo) ||
                     (proposicion_prima.h.equals("float") && proposicion_metodo.tipo.equals("int"))) {
-                    // Si el tipo es compatible, asignar VACÍO (éxito)
                     proposicion_prima.tipo = VACIO;
                 } else {
                     // Error de tipos
@@ -1181,8 +1174,7 @@ public class SintacticoSemantico {
     private void proposicion_metodo(Atributos proposicion_metodo) {
     // Variables locales
     Atributos lista_expresiones = new Atributos();
-    Linea_BE id = cmp.be.preAnalisis; // Identificador del método
-
+    Linea_BE id = cmp.be.preAnalisis;
     if (preAnalisis.equals("(")) {
         // proposicion_metodo -> ( lista_expresiones ) { 54 }
         
@@ -1192,56 +1184,8 @@ public class SintacticoSemantico {
 
         // Acción semántica 54
         if (analizarSemantica) {
-            // Buscar la firma del método en la tabla de símbolos
-            String firmaMetodo = cmp.ts.buscaTipo(id.entrada);
-            System.out.println(firmaMetodo);
-            if (firmaMetodo.isEmpty()) {
-                proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema + " no ha sido declarado.");
-                return;
-            }
-
-            // Separar la firma en parámetros y tipo de retorno
-            String[] partesFirma = firmaMetodo.split("->");
-            if (partesFirma.length != 2) {
-                proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] Firma inválida para el método " + id.lexema + ".");
-                return;
-            }
-
-            String parametrosEsperados = partesFirma[0].trim(); // Tipos de los parámetros
-            String tipoRetorno = partesFirma[1].trim();         // Tipo de retorno del método
-
-            // Comparar tipos de argumentos proporcionados con los esperados
-            String[] tiposParametrosEsperados = parametrosEsperados.split("X");
-            List<String> argumentosProporcionados = lista_expresiones.argumentos;
-
-            if (tiposParametrosEsperados.length != argumentosProporcionados.size()) {
-                proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema +
-                    " esperaba " + tiposParametrosEsperados.length + " argumentos, pero se recibieron " +
-                    argumentosProporcionados.size() + ".");
-                return;
-            }
-
-            // Validar tipos uno a uno
-            for (int i = 0; i < tiposParametrosEsperados.length; i++) {
-                String esperado = tiposParametrosEsperados[i].trim();
-                String recibido = argumentosProporcionados.get(i).trim();
-
-                if (!esperado.equals(recibido) && !(esperado.equals("float") && recibido.equals("int"))) {
-                    proposicion_metodo.tipo = ERROR_TIPO;
-                    cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El argumento " + (i + 1) +
-                        " del método " + id.lexema + " esperaba un " + esperado + ", pero se recibió un " + recibido + ".");
-                    return;
-                }
-            }
-
-            // Asignar el tipo de retorno
-            proposicion_metodo.tipo = tipoRetorno;
+            proposicion_metodo.tipo = lista_expresiones.tipo;            
         }
-
-
         // Fin Acción semántica 54
     } else {
         // proposicion_metodo -> empty { 55 }
@@ -1269,26 +1213,31 @@ public class SintacticoSemantico {
         // lista_expresiones -> expresión lista_expresiones’ { 44 }
         
         expresion(expresion);
-        lista_expresiones.argumentos.add(expresion.tipo); // Guardar el tipo del primer argumento
-
-        // Analizar expresiones adicionales
+       
+        lista_expresiones.argumentos.add(expresion.tipo);        
         lista_expresiones_prima(lista_expresiones_prima);
-        if (lista_expresiones_prima.argumentos != null) {
-            lista_expresiones.argumentos.addAll(lista_expresiones_prima.argumentos); // Agregar más argumentos si existen
-        }
-
         // Acción semántica 44
         if (analizarSemantica) {
-            lista_expresiones.tipo = VACIO;
+            
+            if (lista_expresiones_prima.argumentos != null) {
+                lista_expresiones.argumentos.addAll(lista_expresiones_prima.argumentos); 
+            }
+            if(expresion.tipo.equals(ERROR_TIPO) || lista_expresiones_prima.tipo.equals(ERROR_TIPO)){
+                lista_expresiones.tipo = ERROR_TIPO;
+            }else{
+                lista_expresiones.tipo = VACIO;
+            }            
         }
         // Fin Acción semántica 44
 
     } else {
         // lista_expresiones -> empty { 45 }
-        lista_expresiones.argumentos = new ArrayList<>(); // Ningún argumento
+        //Acción semántica 45
+        lista_expresiones.argumentos = new ArrayList<>();
         if (analizarSemantica) {
             lista_expresiones.tipo = VACIO;
         }
+        //Fin Acción semántica 45
     }
 }
 
@@ -1311,22 +1260,27 @@ public class SintacticoSemantico {
         expresion(expresion);
         lista_expresiones_prima.argumentos.add(expresion.tipo);
         lista_expresiones_prima(lista_expresiones_prima1);
-
-        // Concatenar los argumentos
-        if (lista_expresiones_prima1.argumentos != null) {
-            lista_expresiones_prima.argumentos.addAll(lista_expresiones_prima1.argumentos);
+        
+        //Acción semántica 46
+        if (analizarSemantica) {            
+            if (lista_expresiones_prima1.argumentos != null) {
+                lista_expresiones_prima.argumentos.addAll(lista_expresiones_prima1.argumentos);
+            }            
+            if(expresion.tipo.equals(ERROR_TIPO) || lista_expresiones_prima1.tipo.equals(ERROR_TIPO)){
+                lista_expresiones_prima.tipo = ERROR_TIPO;
+            }else{
+                lista_expresiones_prima.tipo = VACIO;
+            }
         }
-
-        if (analizarSemantica) {
-            lista_expresiones_prima.tipo = VACIO;
-        }
-
+        //Fin Acción semántica 46
     } else {
         // lista_expresiones' -> empty { 47 }
-        lista_expresiones_prima.argumentos = new ArrayList<>(); // Ningún argumento adicional
+        //Acción Semántica 47
+        lista_expresiones_prima.argumentos = new ArrayList<>(); 
         if (analizarSemantica) {
             lista_expresiones_prima.tipo = VACIO;
         }
+        //Fin Acción Semántica 47
     }
 }
 
@@ -1411,12 +1365,14 @@ public class SintacticoSemantico {
                                 expresion_prima.tipo = BOOLEAN;
                             } else {
                                 expresion_prima.tipo = ERROR_TIPO;
-                                cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_prima]. Para compara strings debe de usar el operador relacional '==' o '!='." );
+                                cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_prima]. Para compara strings debe de "
+                                        + "usar el operador relacional '==' o '!='." );
                             }
                             
                         } else {
                             expresion_prima.tipo = ERROR_TIPO;
-                            cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_prima]. No se puede comparar un " + expresion_simple.tipo + " con un " + expresion_prima.h + "." );
+                            cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_prima]. No se puede comparar un " + 
+                                    expresion_simple.tipo + " con un " + expresion_prima.h + "." );
                         }
                     }
                     
@@ -1463,7 +1419,8 @@ public class SintacticoSemantico {
                         
                     } else if ( termino.tipo.equals ( "string" ) ) {
                         expresion_simple.tipo = ERROR_TIPO;
-                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_simple]. No se puede sumar un string con un " + expresion_simple_prima.tipo + "." );
+                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_simple]. No se puede sumar un string con un " + 
+                                expresion_simple_prima.tipo + "." );
                         
                     } else if ( termino.tipo.equals ( "int" ) && expresion_simple_prima.tipo.equals ( "int" ) ) {
                         expresion_simple.tipo = "int";
@@ -1502,10 +1459,11 @@ public class SintacticoSemantico {
             
             // Acción semántica 50
             if ( analizarSemantica ) {
-                if ( !termino.tipo.equals ( ERROR_TIPO ) && !expresion_simple_prima1.tipo.equals ( ERROR_TIPO ) && !termino.tipo.equals ( "string" ) ) {
+                if ( !termino.tipo.equals ( ERROR_TIPO ) && !expresion_simple_prima1.tipo.equals ( ERROR_TIPO ) 
+                        && !termino.tipo.equals ( "string" ) ) {
                     
                     if ( expresion_simple_prima1.tipo.equals ( VACIO ) ) {
-                        expresion_simple_prima.tipo = termino.tipo;
+                        expresion_simple_prima.tipo = termino.tipo;        
                         
                     } else if ( termino.tipo.equals ( "int" ) && expresion_simple_prima1.tipo.equals ( "int" ) ) {
                         expresion_simple_prima.tipo = "int";
@@ -1516,7 +1474,8 @@ public class SintacticoSemantico {
                     
                 } else {
                     expresion_simple_prima.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_simple_prima]. Hay errores de tipo en la expresión o está intentando sumar un string." );
+                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[expresion_simple_prima]. Hay errores de tipo en la expresión o "
+                            + "está intentando sumar un string." );
                 }
             }
             // Fin Acción semántica 50
@@ -1557,7 +1516,8 @@ public class SintacticoSemantico {
                         
                     } else if ( factor.tipo.equals ( "string" ) ) {
                         termino.tipo = ERROR_TIPO;
-                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[termino]. No se puede sumar un string con un " + termino_prima.tipo + "." );
+                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[termino]. No se puede sumar un string con un " + 
+                                termino_prima.tipo + "." );
                         
                     } else if ( factor.tipo.equals ( "int" ) && termino_prima.tipo.equals ( "int" ) ) {
                         termino.tipo = "int";
@@ -1603,15 +1563,15 @@ public class SintacticoSemantico {
                         
                     } else if ( factor.tipo.equals ( "string" ) ) {
                         termino_prima.tipo = ERROR_TIPO;
-                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[termino_prima]. No se puede sumar un string con un " + termino_prima1.tipo + "." );
+                        cmp.me.error ( Compilador.ERR_SEMANTICO, "[termino_prima]. No se puede sumar un string con un " + 
+                                termino_prima1.tipo + "." );
                         
                     } else if ( factor.tipo.equals ( "int" ) && termino_prima1.tipo.equals ( "int" ) ) {
                         termino_prima.tipo = "int";
                         
                     } else {
                         termino_prima.tipo = "float";
-                    }
-                    
+                    }                    
                 } else {
                     termino_prima.tipo = ERROR_TIPO;
                     cmp.me.error ( Compilador.ERR_SEMANTICO, "[termino_prima]. Hay errores de tipo en la expresión." );
@@ -1649,8 +1609,7 @@ public class SintacticoSemantico {
             
             // Acción semántica 37
             if ( analizarSemantica ) {
-                String aux = cmp.ts.buscaTipo ( id.entrada );
-                
+                String aux = cmp.ts.buscaTipo ( id.entrada );                
                 if ( aux.equals ( "" ) ) {
                     factor.tipo = ERROR_TIPO;
                     cmp.me.error ( Compilador.ERR_SEMANTICO, "[factor]. El identificador " + id.lexema + " no ha sido declarado" );
@@ -1730,7 +1689,7 @@ public class SintacticoSemantico {
     private void factor_prima ( Atributos factor_prima ) {
         // Variable local
         Atributos lista_expresiones = new Atributos ();
-        
+        Linea_BE id = cmp.be.preAnalisis;
         if ( preAnalisis.equals ( "(" ) ) {
             // factor' -> ( lista_expreisones ) { 42 }
             

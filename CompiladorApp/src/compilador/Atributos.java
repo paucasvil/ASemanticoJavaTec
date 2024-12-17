@@ -34,14 +34,14 @@ public class Atributos {
 
     public String tipo;
     public String h;
-    public String longitud;
+    public String longi;
     public boolean esArreglo;
     public boolean esMetodo;
     public ArrayList<String> argumentos;
     public Atributos() {
         tipo = "";
         h = "";
-        longitud = "";
+        longi = "";
         esArreglo = false;
         esMetodo = false;
         argumentos = new ArrayList<>();
