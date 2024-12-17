@@ -44,7 +44,6 @@ public class Main {
     }
 
     //--------------------------------------------------------------------------
-    // Nombres a desplegar en el "Acerca de" como colaboradores .
     
     public static final String [] colaboradores = { 
         "   Paulina Jaqueline Castañeda Villalobos  (21130850)", 

@@ -59,7 +59,7 @@ public class SintacticoSemantico {
     public static String ERROR_TIPO = "error_tipo";
     public static String BOOLEAN = "boolean";
 
-    // Nueva estructura auxiliar para almacenar las firmas de los métodos
+  
     private Map<Integer, List<String>> firmasMetodos = new HashMap<>();
 
     private ArrayList<Integer> arrayAuxiliar = new ArrayList ();
@@ -623,11 +623,11 @@ public class SintacticoSemantico {
                 emparejar("(");
                 lista_parametros(lista_parametros);
                 emparejar(")");
-
+                //accion semantica 56
                 if (analizarSemantica) {
                     if (cmp.ts.buscaTipo(id.entrada).equals("") && !lista_parametros.tipo.equals(ERROR_TIPO)) {
                         // Generar la firma del método: "tipo arg1, tipo arg2 -> tipo_retorno"                        
-                        String firma = String.join(" X ", lista_parametros.argumentos) + " -> " + tipo_metodo.tipo;
+                        String firma = String.join("X ", lista_parametros.argumentos) + "-> " + tipo_metodo.tipo;
 
                         // Registrar en la tabla de símbolos
                         cmp.ts.anadeTipo(id.entrada, firma);
@@ -638,9 +638,7 @@ public class SintacticoSemantico {
                         cmp.me.error(Compilador.ERR_SEMANTICO, "[encab_metodo] El método " + id.lexema + " ya ha sido declarado.");
                     }
                 }
-
-
-
+                //fin accion semantica 56
 
             } else {
                 retroceso();
@@ -862,7 +860,7 @@ public class SintacticoSemantico {
                         lista_parametros_prima.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
-                        lista_parametros_prima.argumentos.add(tipo.tipo + " " + id.lexema);
+                        lista_parametros_prima.argumentos.add(tipo.tipo + " ");
                     }
                     
                     lista_parametros_prima.tipo = VACIO;
@@ -1154,7 +1152,16 @@ public class SintacticoSemantico {
             
             // Acción semántica 30
             if ( analizarSemantica ) {
-                proposicion_prima.tipo = proposicion_metodo.tipo;
+                if (proposicion_prima.h.equals(proposicion_metodo.tipo) ||
+                    (proposicion_prima.h.equals("float") && proposicion_metodo.tipo.equals("int"))) {
+                    // Si el tipo es compatible, asignar VACÍO (éxito)
+                    proposicion_prima.tipo = VACIO;
+                } else {
+                    // Error de tipos
+                    proposicion_prima.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_prima] No se puede asignar el retorno de tipo " +
+                        proposicion_metodo.tipo + " a un " + proposicion_prima.h + ".");
+                }
             }
             // Fin Acción semántica 30
             
@@ -1185,43 +1192,56 @@ public class SintacticoSemantico {
 
         // Acción semántica 54
         if (analizarSemantica) {
-            // Verificar si el identificador es un método declarado
-            String tipoMetodo = cmp.ts.buscaTipo(id.entrada);
-            if (tipoMetodo.isEmpty()) {
+            // Buscar la firma del método en la tabla de símbolos
+            String firmaMetodo = cmp.ts.buscaTipo(id.entrada);
+            System.out.println(firmaMetodo);
+            if (firmaMetodo.isEmpty()) {
                 proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El identificador " + id.lexema + " no es un método declarado.");
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema + " no ha sido declarado.");
                 return;
             }
 
-            // Verificar la firma del método en la estructura auxiliar
-            List<String> firmaParametros = firmasMetodos.get(id.entrada);
-            if (firmaParametros == null) {
+            // Separar la firma en parámetros y tipo de retorno
+            String[] partesFirma = firmaMetodo.split("->");
+            if (partesFirma.length != 2) {
                 proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] No se encontraron los parámetros del método " + id.lexema + ".");
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] Firma inválida para el método " + id.lexema + ".");
                 return;
             }
 
-            // Validar el número de argumentos proporcionados
-            if (firmaParametros.size() != lista_expresiones.argumentos.size()) {
+            String parametrosEsperados = partesFirma[0].trim(); // Tipos de los parámetros
+            String tipoRetorno = partesFirma[1].trim();         // Tipo de retorno del método
+
+            // Comparar tipos de argumentos proporcionados con los esperados
+            String[] tiposParametrosEsperados = parametrosEsperados.split("X");
+            List<String> argumentosProporcionados = lista_expresiones.argumentos;
+
+            if (tiposParametrosEsperados.length != argumentosProporcionados.size()) {
                 proposicion_metodo.tipo = ERROR_TIPO;
-                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema + " esperaba " + firmaParametros.size() + " argumentos, pero se proporcionaron " + lista_expresiones.argumentos.size() + ".");
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema +
+                    " esperaba " + tiposParametrosEsperados.length + " argumentos, pero se recibieron " +
+                    argumentosProporcionados.size() + ".");
                 return;
             }
 
-            // Validar los tipos de cada argumento
-            for (int i = 0; i < firmaParametros.size(); i++) {
-                String tipoEsperado = firmaParametros.get(i);
-                String tipoArgumento = lista_expresiones.argumentos.get(i);
-                if (!tipoEsperado.equals(tipoArgumento) && !(tipoEsperado.equals("float") && tipoArgumento.equals("int"))) {
+            // Validar tipos uno a uno
+            for (int i = 0; i < tiposParametrosEsperados.length; i++) {
+                String esperado = tiposParametrosEsperados[i].trim();
+                String recibido = argumentosProporcionados.get(i).trim();
+
+                if (!esperado.equals(recibido) && !(esperado.equals("float") && recibido.equals("int"))) {
                     proposicion_metodo.tipo = ERROR_TIPO;
-                    cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El argumento " + (i + 1) + " del método " + id.lexema + " esperaba un " + tipoEsperado + ", pero se recibió un " + tipoArgumento + ".");
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El argumento " + (i + 1) +
+                        " del método " + id.lexema + " esperaba un " + esperado + ", pero se recibió un " + recibido + ".");
                     return;
                 }
             }
 
-            // Establecer el tipo de retorno del método
-            proposicion_metodo.tipo = tipoMetodo;
+            // Asignar el tipo de retorno
+            proposicion_metodo.tipo = tipoRetorno;
         }
+
+
         // Fin Acción semántica 54
     } else {
         // proposicion_metodo -> empty { 55 }
