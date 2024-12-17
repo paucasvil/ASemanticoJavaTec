@@ -24,6 +24,8 @@
 
 package compilador;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author layla
@@ -35,13 +37,14 @@ public class Atributos {
     public String longitud;
     public boolean esArreglo;
     public boolean esMetodo;
-
+    public ArrayList<String> argumentos;
     public Atributos() {
         tipo = "";
         h = "";
         longitud = "";
         esArreglo = false;
         esMetodo = false;
+        argumentos = new ArrayList<>();
     }
 
 }

@@ -40,6 +40,9 @@ package compilador;
 
 import general.Linea_BE;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SintacticoSemantico {
     // Constantes
@@ -56,7 +59,9 @@ public class SintacticoSemantico {
     public static String ERROR_TIPO = "error_tipo";
     public static String BOOLEAN = "boolean";
 
-    
+    // Nueva estructura auxiliar para almacenar las firmas de los métodos
+    private Map<Integer, List<String>> firmasMetodos = new HashMap<>();
+
     private ArrayList<Integer> arrayAuxiliar = new ArrayList ();
     
     // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -497,7 +502,7 @@ public class SintacticoSemantico {
             // Acción semántica 10
             if ( analizarSemantica ) {
                 cmp.ts.anadeTipo ( num.entrada, "int" );
-                dimension.longitud = num.lexema;
+                dimension.longitud = (Integer.parseInt(num.lexema)-1)+ "" ;
                 dimension.esArreglo = true;
             }
             // Fin Acción semántica 10
@@ -595,50 +600,61 @@ public class SintacticoSemantico {
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
     // Implementado por: Alejandro Huerta Reyna 21130857
-    private void encab_metodo ( Atributos encab_metodo ) {
-        // Variables locales
-        Linea_BE id = new Linea_BE();
-        Atributos tipo_metodo = new Atributos ();
-        Atributos lista_parametros = new Atributos ();
+   private void encab_metodo(Atributos encab_metodo) {
+    // Variables locales
+    Linea_BE id = new Linea_BE();
+    Atributos tipo_metodo = new Atributos();
+    Atributos lista_parametros = new Atributos();
+
+    retroceso = false;
+
+    if (preAnalisis.equals("public")) {
+        ptr = cmp.be.getPrt();
+        // encab_metodo → public static tipo_metodo id ( lista_parametros ) { 56 }
         
-        retroceso = false;
+        emparejar("public");
+        emparejar("static");
+        tipo_metodo(tipo_metodo);
         
-        if ( preAnalisis.equals ( "public" ) ) {
-            ptr = cmp.be.getPrt ();
-            // encab_metodo → public static tipo_metodo  id ( lista_parametros ) { 56 }
-            
-            emparejar ( "public" );
-            emparejar ( "static" );
-            tipo_metodo ( tipo_metodo );
-            
-            if ( !retroceso ) {
-                if ( preAnalisis.equals ( "id" ) ) {
-                    id = cmp.be.preAnalisis;
-                    emparejar ( "id" );
-                    emparejar ( "(" );
-                    lista_parametros ( lista_parametros );
-                    emparejar ( ")" );
-                    
-                    // Acción semántica 56
-                    if ( analizarSemantica ) {
-                        if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) && !lista_parametros.tipo.equals ( ERROR_TIPO ) ) {
-                            cmp.ts.anadeTipo ( id.entrada, tipo_metodo.tipo );
-                            encab_metodo.tipo = VACIO;
-                        } else {
-                            encab_metodo.tipo = ERROR_TIPO;
-                            cmp.me.error ( Compilador.ERR_SEMANTICO, "[encab_metodo] El método " + id.lexema + " ya ha sido declarado." );
+        if (!retroceso) {
+            if (preAnalisis.equals("id")) {
+                id = cmp.be.preAnalisis;
+                emparejar("id");
+                emparejar("(");
+                lista_parametros(lista_parametros);
+                emparejar(")");
+
+                if (analizarSemantica) {
+                    if (cmp.ts.buscaTipo(id.entrada).equals("") && !lista_parametros.tipo.equals(ERROR_TIPO)) {
+                        // Generar la firma del método: "tipo arg1, tipo arg2 -> tipo_retorno"
+                        for(int i =0; i < lista_parametros.argumentos.size(); i++){
+                            System.out.println(lista_parametros.argumentos.get(i));
                         }
+                        
+                        String firma = String.join(" X ", lista_parametros.argumentos) + " -> " + tipo_metodo.tipo;
+
+                        // Registrar en la tabla de símbolos
+                        cmp.ts.anadeTipo(id.entrada, firma);
+
+                        encab_metodo.tipo = VACIO;
+                    } else {
+                        encab_metodo.tipo = ERROR_TIPO;
+                        cmp.me.error(Compilador.ERR_SEMANTICO, "[encab_metodo] El método " + id.lexema + " ya ha sido declarado.");
                     }
-                    // Fin Acción semántica 56
-                    
-                } else {
-                    retroceso ();
                 }
+
+
+
+
+            } else {
+                retroceso();
             }
-        } else {
-            error ( "[encab_metodo] Error de sintaxis. Linea: " + cmp.be.preAnalisis.numLinea );
         }
+    } else {
+        error("[encab_metodo] Error de sintaxis. Linea: " + cmp.be.preAnalisis.numLinea);
     }
+}
+
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -774,11 +790,16 @@ public class SintacticoSemantico {
             
             // Acción semántica 61
             if ( analizarSemantica ) {
+                if (lista_parametros.argumentos == null) {
+                    lista_parametros.argumentos = new ArrayList<>();
+                }
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     if ( dimension.esArreglo == true ) {
                         cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + tipo.tipo + ")" );
+                        lista_parametros.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
+                        lista_parametros.argumentos.add(tipo.tipo + " " + id.lexema);
                     }
                     
                     lista_parametros.tipo = VACIO;
@@ -1148,106 +1169,144 @@ public class SintacticoSemantico {
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
-    private void proposicion_metodo ( Atributos proposicion_metodo ) {
-        // Variable local
-        Atributos lista_expresiones = new Atributos ();
-        
-        if ( preAnalisis.equals ( "(" ) ) {
-            // proposicion_metodo -> ( lista_expresiones ) { 54 }
-            
-            emparejar ( "(" );
-            lista_expresiones ( lista_expresiones );
-            emparejar ( ")" );
-            
-            // Acción semántica 54
-            if ( analizarSemantica ) {
-                proposicion_metodo.tipo = lista_expresiones.tipo;
-            }
-            // Fin Acción semántica 54
+    private void proposicion_metodo(Atributos proposicion_metodo) {
+    // Variables locales
+    Atributos lista_expresiones = new Atributos();
+    Linea_BE id = cmp.be.preAnalisis; // Identificador del método
 
-        } else {
-            //proposicion_metodo -> empty { 55 }
-            
-            // Acción semántica 55
-            if ( analizarSemantica ) {
-                proposicion_metodo.tipo = VACIO;
+    if (preAnalisis.equals("(")) {
+        // proposicion_metodo -> ( lista_expresiones ) { 54 }
+        
+        emparejar("(");
+        lista_expresiones(lista_expresiones);
+        emparejar(")");
+
+        // Acción semántica 54
+        if (analizarSemantica) {
+            // Verificar si el identificador es un método declarado
+            String tipoMetodo = cmp.ts.buscaTipo(id.entrada);
+            if (tipoMetodo.isEmpty()) {
+                proposicion_metodo.tipo = ERROR_TIPO;
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El identificador " + id.lexema + " no es un método declarado.");
+                return;
             }
-            // Fin Acción semántica 55
+
+            // Verificar la firma del método en la estructura auxiliar
+            List<String> firmaParametros = firmasMetodos.get(id.entrada);
+            if (firmaParametros == null) {
+                proposicion_metodo.tipo = ERROR_TIPO;
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] No se encontraron los parámetros del método " + id.lexema + ".");
+                return;
+            }
+
+            // Validar el número de argumentos proporcionados
+            if (firmaParametros.size() != lista_expresiones.argumentos.size()) {
+                proposicion_metodo.tipo = ERROR_TIPO;
+                cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El método " + id.lexema + " esperaba " + firmaParametros.size() + " argumentos, pero se proporcionaron " + lista_expresiones.argumentos.size() + ".");
+                return;
+            }
+
+            // Validar los tipos de cada argumento
+            for (int i = 0; i < firmaParametros.size(); i++) {
+                String tipoEsperado = firmaParametros.get(i);
+                String tipoArgumento = lista_expresiones.argumentos.get(i);
+                if (!tipoEsperado.equals(tipoArgumento) && !(tipoEsperado.equals("float") && tipoArgumento.equals("int"))) {
+                    proposicion_metodo.tipo = ERROR_TIPO;
+                    cmp.me.error(Compilador.ERR_SEMANTICO, "[proposicion_metodo] El argumento " + (i + 1) + " del método " + id.lexema + " esperaba un " + tipoEsperado + ", pero se recibió un " + tipoArgumento + ".");
+                    return;
+                }
+            }
+
+            // Establecer el tipo de retorno del método
+            proposicion_metodo.tipo = tipoMetodo;
         }
+        // Fin Acción semántica 54
+    } else {
+        // proposicion_metodo -> empty { 55 }
+
+        // Acción semántica 55
+        if (analizarSemantica) {
+            proposicion_metodo.tipo = VACIO;
+        }
+        // Fin Acción semántica 55
     }
+}
+
+
+
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
-    private void lista_expresiones ( Atributos lista_expresiones ) {
-        // Variables locales
-        Atributos expresion = new Atributos ();
-        Atributos lista_expresiones_prima = new Atributos ();
-        
-        if ( preAnalisis.equals ( "id" ) || preAnalisis.equals ( "num" ) || preAnalisis.equals ( "num.num" ) || preAnalisis.equals ( "(" ) || preAnalisis.equals ( "literal" ) ) {
-            // lista_expresiones -> expresión  lista_expresiones’ { 44 } 
-            
-            expresion ( expresion );
-            lista_expresiones_prima ( lista_expresiones_prima );
-            
-            // Acción semántica 44
-            if ( analizarSemantica ) {
-                if ( expresion.tipo.equals ( ERROR_TIPO ) || lista_expresiones_prima.tipo.equals ( ERROR_TIPO ) ) {
-                    lista_expresiones.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_expresiones]. Las expresiones dentro del método contienen errores de tipo." );
-                } else { 
-                    lista_expresiones.tipo = VACIO;
-                }
-            }
-            // Fin Acción semántica 44
+    private void lista_expresiones(Atributos lista_expresiones) {
+    // Variables locales
+    Atributos expresion = new Atributos();
+    Atributos lista_expresiones_prima = new Atributos();
+    lista_expresiones.argumentos = new ArrayList<>();
 
-        } else {
-            // lista_expresiones -> empty { 45 }
-            
-            // Acción semántica 45
-            if ( analizarSemantica ) {
-                lista_expresiones.tipo = VACIO;
-            }
-            // Fin Acción semántica 45
+    if (preAnalisis.equals("id") || preAnalisis.equals("num") || preAnalisis.equals("num.num") || preAnalisis.equals("(") || preAnalisis.equals("literal")) {
+        // lista_expresiones -> expresión lista_expresiones’ { 44 }
+        
+        expresion(expresion);
+        lista_expresiones.argumentos.add(expresion.tipo); // Guardar el tipo del primer argumento
+
+        // Analizar expresiones adicionales
+        lista_expresiones_prima(lista_expresiones_prima);
+        if (lista_expresiones_prima.argumentos != null) {
+            lista_expresiones.argumentos.addAll(lista_expresiones_prima.argumentos); // Agregar más argumentos si existen
+        }
+
+        // Acción semántica 44
+        if (analizarSemantica) {
+            lista_expresiones.tipo = VACIO;
+        }
+        // Fin Acción semántica 44
+
+    } else {
+        // lista_expresiones -> empty { 45 }
+        lista_expresiones.argumentos = new ArrayList<>(); // Ningún argumento
+        if (analizarSemantica) {
+            lista_expresiones.tipo = VACIO;
         }
     }
+}
+
+
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
     // Implementado por: Diego Muñoz Rede (21130893)
     // PRIMEROS ( lista_expresiones') = { ',' } U { 'empty' }
-    private void lista_expresiones_prima ( Atributos lista_expresiones_prima ) {
-        // Variables locales
-        Atributos expresion = new Atributos ();
-        Atributos lista_expresiones_prima1 = new Atributos ();
-        
-        if ( preAnalisis.equals ( "," ) ) {
-            // lista_expresiones' -> , expresion lista_expresiones' { 46 }
-            
-            emparejar ( "," );
-            expresion ( expresion );
-            lista_expresiones_prima ( lista_expresiones_prima1 );
-            
-            // Acción semántica 46
-            if ( analizarSemantica ) {
-                if ( expresion.tipo.equals ( ERROR_TIPO ) || lista_expresiones_prima1.tipo.equals ( ERROR_TIPO ) ) {
-                    lista_expresiones_prima.tipo = ERROR_TIPO;
-                    cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_expresiones_prima]. Las expresiones dentro del método contienen errores de tipo." );
-                } else { 
-                    lista_expresiones_prima.tipo = VACIO;
-                }
-            }
-            // Fin Acción semántica 46
+    private void lista_expresiones_prima(Atributos lista_expresiones_prima) {
+    // Variables locales
+    Atributos expresion = new Atributos();
+    Atributos lista_expresiones_prima1 = new Atributos();
+    lista_expresiones_prima.argumentos = new ArrayList<>();
 
-        } else {
-            // lista_expresiones' -> empty { 47 }
-            
-            // Acción semántica 47
-            if ( analizarSemantica ) {
-                lista_expresiones_prima.tipo = VACIO;
-            }
-            // Fin Acción semántica 47
+    if (preAnalisis.equals(",")) {
+        // lista_expresiones' -> , expresion lista_expresiones' { 46 }
+
+        emparejar(",");
+        expresion(expresion);
+        lista_expresiones_prima.argumentos.add(expresion.tipo);
+        lista_expresiones_prima(lista_expresiones_prima1);
+
+        // Concatenar los argumentos
+        if (lista_expresiones_prima1.argumentos != null) {
+            lista_expresiones_prima.argumentos.addAll(lista_expresiones_prima1.argumentos);
+        }
+
+        if (analizarSemantica) {
+            lista_expresiones_prima.tipo = VACIO;
+        }
+
+    } else {
+        // lista_expresiones' -> empty { 47 }
+        lista_expresiones_prima.argumentos = new ArrayList<>(); // Ningún argumento adicional
+        if (analizarSemantica) {
+            lista_expresiones_prima.tipo = VACIO;
         }
     }
+}
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------
     
