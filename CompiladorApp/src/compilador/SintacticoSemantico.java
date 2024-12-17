@@ -626,11 +626,7 @@ public class SintacticoSemantico {
 
                 if (analizarSemantica) {
                     if (cmp.ts.buscaTipo(id.entrada).equals("") && !lista_parametros.tipo.equals(ERROR_TIPO)) {
-                        // Generar la firma del método: "tipo arg1, tipo arg2 -> tipo_retorno"
-                        for(int i =0; i < lista_parametros.argumentos.size(); i++){
-                            System.out.println(lista_parametros.argumentos.get(i));
-                        }
-                        
+                        // Generar la firma del método: "tipo arg1, tipo arg2 -> tipo_retorno"                        
                         String firma = String.join(" X ", lista_parametros.argumentos) + " -> " + tipo_metodo.tipo;
 
                         // Registrar en la tabla de símbolos
@@ -799,7 +795,7 @@ public class SintacticoSemantico {
                         lista_parametros.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
-                        lista_parametros.argumentos.add(tipo.tipo + " " + id.lexema);
+                        lista_parametros.argumentos.add(tipo.tipo + " " );
                     }
                     
                     lista_parametros.tipo = VACIO;
@@ -812,9 +808,9 @@ public class SintacticoSemantico {
             // Fin Acción semántica 61
             
             lista_parametros_prima ( lista_parametros_prima );
-            
             // Acción semántica 62
             if ( analizarSemantica ) {
+                lista_parametros.argumentos.addAll(lista_parametros_prima.argumentos);
                 if ( lista_parametros_prima.tipo.equals ( VACIO ) && lista_parametros.tipo.equals ( VACIO ) ) {
                     lista_parametros.tipo = VACIO;
                 } else {
@@ -857,11 +853,16 @@ public class SintacticoSemantico {
             
             // Acción semántica 64
             if ( analizarSemantica ) {
+                 if (lista_parametros_prima.argumentos == null) {
+                    lista_parametros_prima.argumentos = new ArrayList<>();
+                }
                 if ( cmp.ts.buscaTipo ( id.entrada ).equals ( "" ) ) {
                     if ( dimension.esArreglo == true ) {
                         cmp.ts.anadeTipo ( id.entrada, "array(0.." + dimension.longitud + ", " + tipo.tipo + ")" );
+                        lista_parametros_prima.argumentos.add("array(0.." + dimension.longitud + ", " + tipo.tipo + ")");
                     } else {
                         cmp.ts.anadeTipo ( id.entrada, tipo.tipo );
+                        lista_parametros_prima.argumentos.add(tipo.tipo + " " + id.lexema);
                     }
                     
                     lista_parametros_prima.tipo = VACIO;
@@ -877,12 +878,13 @@ public class SintacticoSemantico {
             
             // Acción semántica 65
             if ( analizarSemantica ) {
+                lista_parametros_prima.argumentos.addAll(lista_parametros_prima1.argumentos);
                 if ( lista_parametros_prima.tipo.equals ( VACIO ) && lista_parametros_prima1.tipo.equals ( VACIO ) ) {
-                    lista_parametros_prima.tipo = VACIO;
+                    lista_parametros_prima.tipo = VACIO;                    
                 } else {
                     lista_parametros_prima.tipo = ERROR_TIPO;
                     cmp.me.error ( Compilador.ERR_SEMANTICO, "[lista_parametros_prima]. Hay un error de tipo en el parámetro " + id.lexema + "." );
-                }
+                }                
             }
             // Fin Acción semántica 65
 

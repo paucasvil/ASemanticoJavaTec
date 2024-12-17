@@ -47,9 +47,8 @@ public class Main {
     // Nombres a desplegar en el "Acerca de" como colaboradores .
     
     public static final String [] colaboradores = { 
-        "Lenguajes y Automatas II :: Grupo 8-9 am :: Semestre Ago-Dic/2024",
-        "Valery Araceli Guerrero Rodriguez  (21130925)", 
-        "Edgar Manuel Carrillo Muruato      (21130864)" 
+        "   Paulina Jaqueline Castañeda Villalobos  (21130850)", 
+        "   Layla Vanessa González Martínez         (21130868)" 
     };  
    
 }
